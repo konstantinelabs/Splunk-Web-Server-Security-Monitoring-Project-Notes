@@ -1,0 +1,139 @@
+<dashboard version="1.1" theme="light">
+  <label>Web Server Security Monitoring</label>
+  <description>This dashboard uses static epoch timestamps from Oct 31 – Nov 1, 2025. To see results, either: Ensure your sample logs match that range, or Edit the dashboard and adjust time windows in each panel.</description>
+  <row>
+    <panel>
+      <table>
+        <title>Top Failed Login Attempts</title>
+        <search>
+          <query>index=web sourcetype=access_combined status IN (401,403)
+| eval src_ip=coalesce(clientip, src_ip, ip, c_ip)
+| stats count as failed_attempts by src_ip
+| sort - failed_attempts
+| head 10
+| iplocation src_ip
+| eval location=coalesce(City.", ".Country, Country, "Unknown")</query>
+          <earliest>1761878400</earliest>
+          <latest>1762047599</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Geo Map of Suspicious IPs</title>
+      <map>
+        <search>
+          <query>index=web sourcetype=access_combined status IN (401,403) earliest=-24h
+| eval src_ip=coalesce(clientip, src_ip, ip, c_ip)
+| stats count as hits by src_ip
+| iplocation src_ip
+| where isnotnull(Country)
+| geostats latfield=lat longfield=lon count by Country</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="mapping.choroplethLayer.colorBins">5</option>
+        <option name="mapping.choroplethLayer.colorMode">auto</option>
+        <option name="mapping.choroplethLayer.maximumColor">0xaf575a</option>
+        <option name="mapping.choroplethLayer.minimumColor">0x62b3b2</option>
+        <option name="mapping.choroplethLayer.neutralPoint">0</option>
+        <option name="mapping.choroplethLayer.shapeOpacity">0.75</option>
+        <option name="mapping.choroplethLayer.showBorder">1</option>
+        <option name="mapping.data.maxClusters">100</option>
+        <option name="mapping.legend.placement">bottomright</option>
+        <option name="mapping.map.center">(0,0)</option>
+        <option name="mapping.map.panning">1</option>
+        <option name="mapping.map.scrollZoom">0</option>
+        <option name="mapping.map.zoom">2</option>
+        <option name="mapping.markerLayer.markerMaxSize">50</option>
+        <option name="mapping.markerLayer.markerMinSize">10</option>
+        <option name="mapping.markerLayer.markerOpacity">0.8</option>
+        <option name="mapping.showTiles">1</option>
+        <option name="mapping.tileLayer.maxZoom">7</option>
+        <option name="mapping.tileLayer.minZoom">0</option>
+        <option name="mapping.tileLayer.tileOpacity">1</option>
+        <option name="mapping.type">marker</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </map>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>HTTP Status Codes Over Time</title>
+      <table>
+        <search>
+          <query>index=web sourcetype=access_combined earliest=-24h
+| timechart count by status</query>
+          <earliest>1761878400</earliest>
+          <latest>1762047599</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Top Attack Tool User Agents</title>
+      <table>
+        <search>
+          <query>index=web sourcetype=access_combined status IN (401,403) earliest=-24h
+| stats count as attempts by useragent
+| sort - attempts
+| head 10</query>
+          <earliest>1761878400</earliest>
+          <latest>1762047599</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Most-Requested Suspicious URIs</title>
+      <table>
+        <search>
+          <query>index=web sourcetype=access_combined earliest=-24h
+| search uri IN ("/login","/admin/login","/wp-login.php","/.env","/.git/config","/phpmyadmin","/server-status","/cgi-bin/test-cgi","/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php")
+| stats count by uri
+| sort - count</query>
+          <earliest>1761878400</earliest>
+          <latest>1762047599</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>
